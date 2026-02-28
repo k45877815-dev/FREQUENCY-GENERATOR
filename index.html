@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head><title>Frequency Generator 1-40kHz | High-Quality Online Tone Generator</title>
+<meta name="description" content="A free online frequency generator tool. Generate pure sine wave tones and test your speakers or hearing.">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            width: 500px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #2a5298;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        input[type="number"] {
+            width: 120px;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        select {
+            padding: 6px;
+            width: 150px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:first-of-type {
+            background-color: #2a5298;
+            color: white;
+        }
+
+        button:first-of-type:hover {
+            background-color: #1e3c72;
+        }
+
+        button:last-of-type {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        button:last-of-type:hover {
+            background-color: #c0392b;
+        }
+
+        #freqDisplay {
+            font-weight: bold;
+            color: #2a5298;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+<h2>Frequency Generator (1 Hz – 40,000 Hz)</h2>
+
+<div class="section">
+<label>Frequency (Hz):</label><br>
+<input type="range" id="freqSlider" min="1" max="40000" value="440" step="1">
+<br><br>
+<input type="number" id="freqInput" min="1" max="40000" value="440">
+<span id="freqDisplay">440 Hz</span>
+</div>
+
+<div class="section">
+<label>Wave Type:</label><br>
+<select id="waveType">
+    <option value="sine">Sine</option>
+    <option value="square">Square</option>
+    <option value="triangle">Triangle</option>
+    <option value="sawtooth">Sawtooth</option>
+</select>
+</div>
+
+<div class="section">
+<label>Volume:</label><br>
+<input type="range" id="volume" min="0" max="1" value="0.2" step="0.01">
+</div>
+
+<button onclick="startTone()">Start</button>
+<button onclick="stopTone()">Stop</button>
+</div>
+
+<script>
+let audioContext;
+let oscillator;
+let gainNode;
+
+const slider = document.getElementById("freqSlider");
+const input = document.getElementById("freqInput");
+const display = document.getElementById("freqDisplay");
+const waveSelect = document.getElementById("waveType");
+const volumeControl = document.getElementById("volume");
+
+function updateFrequency(value) {
+    value = Math.max(1, Math.min(40000, value));
+    slider.value = value;
+    input.value = value;
+    display.textContent = value + " Hz";
+    if (oscillator) {
+        oscillator.frequency.setValueAtTime(value, audioContext.currentTime);
+    }
+}
+
+slider.oninput = () => updateFrequency(slider.value);
+input.oninput = () => updateFrequency(input.value);
+
+function startTone() {
+    if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    oscillator = audioContext.createOscillator();
+    gainNode = audioContext.createGain();
+
+    oscillator.type = waveSelect.value;
+    oscillator.frequency.setValueAtTime(slider.value, audioContext.currentTime);
+
+    gainNode.gain.setValueAtTime(volumeControl.value, audioContext.currentTime);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    oscillator.start();
+}
+
+function stopTone() {
+    if (oscillator) {
+        oscillator.stop();
+        oscillator.disconnect();
+        oscillator = null;
+    }
+}
+
+waveSelect.onchange = () => {
+    if (oscillator) oscillator.type = waveSelect.value;
+};
+
+volumeControl.oninput = () => {
+    if (gainNode) {
+        gainNode.gain.setValueAtTime(volumeControl.value, audioContext.currentTime);
+    }
+};
+</script>
+
+</body>
+</html>
